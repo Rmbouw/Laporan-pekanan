@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Tahfizh An-Najah Kls VIII</title>
+  <title>Generator Laporan Tahfizh - Clean Header</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
@@ -11,17 +11,18 @@
     
     #canvas-wrapper {
       width: 100%;
-      max-width: 1300px;
+      max-width: 1100px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
       align-items: center;
     }
 
-    #mainCanvas {
+    .canvas-preview {
       max-width: 100%;
       height: auto;
       border-radius: 12px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.5);
     }
   </style>
 </head>
@@ -31,29 +32,29 @@
   <div class="w-full lg:w-[420px] bg-white p-5 lg:p-6 shadow-2xl overflow-y-auto max-h-screen flex-shrink-0 z-20">
     <div class="border-b pb-3 mb-4">
       <h2 class="text-xl font-bold text-emerald-800 flex items-center gap-2">
-        <span>📖</span> Laporan Tahfizh Kls 8
+        <span>🕌</span> Generator Tahfizh (2 Page)
       </h2>
-      <p class="text-xs text-slate-500">◀• ılıılıılıılılılılı.1:2</p>
+      <p class="text-xs text-slate-500">4 Kartu / Halaman - Teks & Foto Besar</p>
     </div>
 
-    <!-- Header & Logo Input -->
+    <!-- Header Inputs -->
     <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-      <h3 class="font-bold text-xs uppercase text-slate-600">Informasi</h3>
+      <h3 class="font-bold text-xs uppercase text-slate-600">Informasi & Logo Header</h3>
       <div>
         <label class="block text-xs font-semibold mb-1">Judul Utama</label>
-        <input type="text" id="input-judul" value="LAPORAN PEKANAN TAHFIZH" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+        <input type="text" id="input-judul" value="LAPORAN PEKANAN TAHFIZH" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
         <label class="block text-xs font-semibold mb-1">Nama Kelas</label>
-        <input type="text" id="input-kelas" value="KELAS VIII An-Najah" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+        <input type="text" id="input-kelas" value="KELAS VIII An-Najah" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
         <label class="block text-xs font-semibold mb-1">Rentang Tanggal & Tahun</label>
-        <input type="text" id="input-periode" value="20 - 24 JULI 2026" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+        <input type="text" id="input-periode" value="20 - 24 JULI 2026" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
-        <label class="block text-xs font-semibold mb-1">Nama Sekolah</label>
-        <input type="text" id="input-instansi" value="Sekolah Tahfidz Sahabat Qur'an" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+        <label class="block text-xs font-semibold mb-1">Nama Sekolah / Instansi</label>
+        <input type="text" id="input-instansi" value="Sekolah Tahfidz Sahabat Qur'an" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
         <label class="block text-xs font-semibold mb-1">Upload Logo Sekolah (STSQ)</label>
@@ -61,12 +62,13 @@
       </div>
     </div>
 
+    <!-- Export Buttons -->
     <div class="grid grid-cols-2 gap-2 mb-6">
       <button onclick="downloadPNG()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1">
-        <span></span> Unduh PNG
+        <span>📥</span> Unduh 2 PNG
       </button>
       <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1">
-        <span></span> Unduh PDF
+        <span>📄</span> Unduh PDF (2 Hal)
       </button>
     </div>
 
@@ -77,16 +79,23 @@
     </div>
   </div>
 
-  <div class="flex-1 p-3 sm:p-6 overflow-auto flex items-center justify-center bg-slate-800">
+  <!-- CANVAS PREVIEW AREA -->
+  <div class="flex-1 p-4 sm:p-6 overflow-auto flex justify-center bg-slate-800">
     <div id="canvas-wrapper">
-      <canvas id="mainCanvas" width="1300" height="960"></canvas>
+      <div>
+        <span class="text-white text-xs font-bold mb-1 block">HALAMAN 1 (Santri 1 - 4)</span>
+        <canvas id="canvasPage1" width="1200" height="900" class="canvas-preview"></canvas>
+      </div>
+      <div>
+        <span class="text-white text-xs font-bold mb-1 block">HALAMAN 2 (Santri 5 - 8)</span>
+        <canvas id="canvasPage2" width="1200" height="900" class="canvas-preview"></canvas>
+      </div>
     </div>
   </div>
 
   <script>
     let customLogoImg = null;
 
-    // Data Santri dengan 4 nama baru di baris bawah: MIZAN, FATIH, IHSAN, DZULFIKAR
     const defaultData = [
       { nama: "AKHDAN", hafalan: "2 Juz 4 HLM", ziyadah: "1 HLM", murojaah: "2 Juz 4 HLM", catatan: "Semangat dan maksimalkan hafalan lagi di pekan berikutnya.", fotoImg: null },
       { nama: "FATEH", hafalan: "2 Juz 4 HLM", ziyadah: "1 HLM", murojaah: "2 Juz 4 HLM", catatan: "Semangat dan maksimalkan target hafalan lagi.", fotoImg: null },
@@ -126,7 +135,7 @@
 
     function updateData(i, field, val) {
       santriData[i][field] = val;
-      drawCanvas();
+      drawAllCanvases();
     }
 
     function updateFoto(i, e) {
@@ -137,7 +146,7 @@
           const img = new Image();
           img.onload = () => {
             santriData[i].fotoImg = img;
-            drawCanvas();
+            drawAllCanvases();
           };
           img.src = evt.target.result;
         };
@@ -153,7 +162,7 @@
           const img = new Image();
           img.onload = () => {
             customLogoImg = img;
-            drawCanvas();
+            drawAllCanvases();
           };
           img.src = evt.target.result;
         };
@@ -161,197 +170,238 @@
       }
     }
 
-    function drawCanvas() {
-      const canvas = document.getElementById('mainCanvas');
+    function drawAllCanvases() {
+      drawSinglePage('canvasPage1', santriData.slice(0, 4));
+      drawSinglePage('canvasPage2', santriData.slice(4, 8));
+    }
+
+    function drawSinglePage(canvasId, items) {
+      const canvas = document.getElementById(canvasId);
       const ctx = canvas.getContext('2d');
 
-      // 1. Latar Belakang Hijau Islami
+      // Background
       ctx.fillStyle = "#8bae9a";
-      ctx.fillRect(0, 0, 1300, 960);
+      ctx.fillRect(0, 0, 1200, 900);
 
-      // 2. Ornamen Bingkai Luar Islami
+      // Bingkai Luar
       ctx.strokeStyle = "#044e3a";
       ctx.lineWidth = 6;
-      ctx.strokeRect(15, 15, 1270, 930);
+      ctx.strokeRect(12, 12, 1176, 876);
 
-      ctx.strokeStyle = "#d97706"; // Warna Emas/Amber
+      ctx.strokeStyle = "#d97706";
       ctx.lineWidth = 2;
-      ctx.strokeRect(22, 22, 1256, 916);
+      ctx.strokeRect(18, 18, 1164, 864);
 
-      // Header Variables
+      // Header Data
       const judul = document.getElementById('input-judul').value;
       const kelas = document.getElementById('input-kelas').value;
       const periode = document.getElementById('input-periode').value;
       const instansi = document.getElementById('input-instansi').value;
 
-      // Judul Utama (Ukuran Diperbesar)
+      // Judul Utama (Besar)
       ctx.fillStyle = "#033829";
-      ctx.font = "bold 36px Arial";
-      ctx.fillText(`📖 ${judul}`, 45, 55);
+      ctx.font = "bold 34px Arial";
+      ctx.fillText(`📖 ${judul}`, 40, 52);
 
-      // Nama Kelas
+      // Kelas
       ctx.fillStyle = "#065f46";
-      ctx.font = "bold 28px Arial";
-      ctx.fillText(kelas, 82, 85);
+      ctx.font = "bold 20px Arial";
+      ctx.fillText(kelas, 78, 82);
 
-      // Badge Periode Tanggal
+      // Badge Periode
       ctx.fillStyle = "#044e3a";
       ctx.beginPath();
-      ctx.roundRect(80, 98, 250, 34, 8);
+      ctx.roundRect(78, 95, 240, 32, 8);
       ctx.fill();
 
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 15px Arial";
-      ctx.fillText(`[ ${periode} ]`, 98, 120);
+      ctx.fillText(`[ ${periode} ]`, 95, 116);
 
+      // Header Kanan Logo
       const instansiWidth = ctx.measureText(instansi).width;
       const boxWidth = Math.max(300, instansiWidth + 85);
-      const boxX = 1250 - boxWidth;
+      const boxX = 1160 - boxWidth;
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
       ctx.beginPath();
-      ctx.roundRect(boxX, 30, boxWidth, 75, 14);
+      ctx.roundRect(boxX, 28, boxWidth, 72, 12);
       ctx.fill();
       ctx.strokeStyle = "#d97706";
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      const logoX = boxX + 12;
-      const logoY = 40;
-      const logoSize = 55;
+      const logoX = boxX + 10;
+      const logoY = 37;
+      const logoSize = 54;
 
       if (customLogoImg) {
         ctx.save();
         ctx.beginPath();
-        ctx.roundRect(logoX, logoY, logoSize, logoSize, 10);
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
         ctx.clip();
         ctx.drawImage(customLogoImg, logoX, logoY, logoSize, logoSize);
         ctx.restore();
       } else {
         ctx.fillStyle = "#044e3a";
         ctx.beginPath();
-        ctx.roundRect(logoX, logoY, logoSize, logoSize, 10);
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
         ctx.fill();
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 14px Arial";
-        ctx.fillText("STSQ", logoX + 8, logoY + 33);
+        ctx.fillText("STSQ", logoX + 8, logoY + 32);
       }
 
       ctx.fillStyle = "#033829";
       ctx.font = "bold 15px Arial";
-      wrapText(ctx, instansi, logoX + 68, 62, boxWidth - 80, 18);
+      wrapText(ctx, instansi, logoX + 68, 60, boxWidth - 80, 18);
 
+      // Line Pembatas
       ctx.strokeStyle = "rgba(4, 78, 58, 0.3)";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(45, 145);
-      ctx.lineTo(1250, 145);
+      ctx.moveTo(40, 138);
+      ctx.lineTo(1160, 138);
       ctx.stroke();
 
-      const startX = 45;
-      const startY = 160;
-      const cardW = 285;
-      const cardH = 365;
-      const gapX = 20;
-      const gapY = 22;
+      // GRID 4 KARTU
+      const startX = 65;
+      const startY = 155;
+      const cardW = 515;
+      const cardH = 340;
+      const gapX = 40;
+      const gapY = 25;
 
-      santriData.forEach((s, idx) => {
-        const col = idx % 4;
-        const row = Math.floor(idx / 4);
+      items.forEach((s, idx) => {
+        const col = idx % 2;
+        const row = Math.floor(idx / 2);
         const x = startX + col * (cardW + gapX);
         const y = startY + row * (cardH + gapY);
 
-        // Frame Kartu Utama
-        ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+        // Box Kartu
+        ctx.fillStyle = "rgba(255, 255, 255, 0.72)";
         ctx.beginPath();
-        ctx.roundRect(x, y, cardW, cardH, 18);
+        ctx.roundRect(x, y, cardW, cardH, 20);
         ctx.fill();
         ctx.strokeStyle = "#044e3a";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        const photoX = x + (cardW - 90) / 2;
-        const photoY = y + 14;
-        ctx.fillStyle = "#e2e8f0";
+        // Foto Frame
+        const photoX = x + 20;
+        const photoY = y + 20;
+        const photoW = 140;
+        const photoH = 175;
+
+        ctx.fillStyle = "#cbd5e1";
         ctx.beginPath();
-        ctx.roundRect(photoX, photoY, 90, 105, 10);
+        ctx.roundRect(photoX, photoY, photoW, photoH, 12);
         ctx.fill();
         ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.stroke();
 
         if (s.fotoImg) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.roundRect(photoX, photoY, 90, 105, 10);
-          ctx.clip();
-          ctx.drawImage(s.fotoImg, photoX, photoY, 90, 105);
-          ctx.restore();
+          drawAspectCropImage(ctx, s.fotoImg, photoX, photoY, photoW, photoH, 12);
         } else {
           ctx.fillStyle = "#64748b";
-          ctx.font = "bold 11px Arial";
-          ctx.fillText("Foto Santri", photoX + 16, photoY + 58);
+          ctx.font = "bold 13px Arial";
+          ctx.fillText("Foto Santri", photoX + 35, photoY + 92);
         }
 
-        // Name Badge Emas/Kuning
+        // Nama Badge
+        const contentX = photoX + photoW + 20;
+        const contentW = cardW - photoW - 60;
+
         ctx.fillStyle = "#fef08a";
         ctx.beginPath();
-        ctx.roundRect(x + 35, y + 125, cardW - 70, 26, 6);
+        ctx.roundRect(contentX, photoY, contentW, 36, 8);
         ctx.fill();
         ctx.strokeStyle = "#eab308";
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         ctx.fillStyle = "#0f172a";
-        ctx.font = "bold 13px Arial";
+        ctx.font = "bold 20px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(s.nama || "SANTRI", x + cardW / 2, y + 142);
+        ctx.fillText(s.nama || "SANTRI", contentX + contentW / 2, photoY + 23);
         ctx.textAlign = "left";
 
-        // Pita Indikator Hafalan (Teks Diperbesar)
+        // Pita Indikator Hafalan
         const drawRibbon = (ry, label, val) => {
           ctx.fillStyle = "#fef08a";
           ctx.beginPath();
-          ctx.roundRect(x + 12, ry, cardW - 24, 25, 7);
+          ctx.roundRect(contentX, ry, contentW, 36, 8);
           ctx.fill();
 
           ctx.fillStyle = "#1e293b";
-          ctx.font = "15.5px Arial";
-          ctx.fillText(`📖 ${label}: `, x + 18, ry + 17);
-          ctx.font = "bold 15.5px Arial";
-          ctx.fillText(val, x + 18 + ctx.measureText(`📖 ${label}: `).width, ry + 17);
+          ctx.font = "15px Arial";
+          ctx.fillText(`📖 ${label}: `, contentX + 12, ry + 22);
+          ctx.font = "bold 15px Arial";
+          ctx.fillText(val, contentX + 12 + ctx.measureText(`📖 ${label}: `).width, ry + 22);
         };
 
-        drawRibbon(y + 158, "Jumlah hafalan", s.hafalan);
-        drawRibbon(y + 188, "Ziyadah Pekan ini", s.ziyadah);
-        drawRibbon(y + 218, "Muraja'ah", s.murojaah);
+        drawRibbon(photoY + 46, "Jml Hafalan", s.hafalan);
+        drawRibbon(photoY + 92, "Ziyadah", s.ziyadah);
+        drawRibbon(photoY + 138, "Muraja'ah", s.murojaah);
 
-        // Kotak Catatan Evaluasi (Lebih Luas)
-        const notesY = y + 250;
-        const notesH = 102;
+        // Kotak Catatan
+        const notesY = photoY + photoH + 15;
+        const notesW = cardW - 40;
+        const notesH = 105;
+
         ctx.fillStyle = "#fef08a";
         ctx.beginPath();
-        ctx.roundRect(x + 12, notesY, cardW - 24, notesH, 10);
+        ctx.roundRect(photoX, notesY, notesW, notesH, 10);
         ctx.fill();
         ctx.strokeStyle = "#fde047";
         ctx.stroke();
 
         ctx.fillStyle = "#713f12";
-        ctx.font = "bold 15.5px Arial";
-        ctx.fillText(" Catatan:", x + 18, notesY + 18);
+        ctx.font = "bold 16px Arial";
+        ctx.fillText("📝 Catatan:", photoX + 15, notesY + 22);
 
-        // Multiline Text Catatan
         ctx.fillStyle = "#1e293b";
-        ctx.font = "13.5px Arial";
-        wrapText(ctx, s.catatan || "-", x + 18, notesY + 34, cardW - 36, 14);
+        ctx.font = "14px Arial";
+        wrapText(ctx, s.catatan || "-", photoX + 15, notesY + 42, notesW - 30, 16);
       });
 
-      // 4. Footer
+      // Footer
       ctx.fillStyle = "#033829";
-      ctx.font = "bold 12px Arial";
-      ctx.fillText("* Laporan Resmi Divisi Tahfizh", 45, 938);
-      ctx.fillText(instansi, 1250 - ctx.measureText(instansi).width, 938);
+      ctx.font = "bold 13px Arial";
+      ctx.fillText("*STSQ An-Najah EST 6 KLS VIII", 40, 878);
+      ctx.fillText(instansi, 1160 - ctx.measureText(instansi).width, 878);
+    }
+
+    function drawAspectCropImage(ctx, img, x, y, width, height, radius) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, radius);
+      ctx.clip();
+
+      const imgWidth = img.naturalWidth || img.width;
+      const imgHeight = img.naturalHeight || img.height;
+
+      const aspect = imgWidth / imgHeight;
+      const targetAspect = width / height;
+
+      let renderW, renderH, offsetX, offsetY;
+
+      if (aspect > targetAspect) {
+        renderH = height;
+        renderW = height * aspect;
+        offsetY = 0;
+        offsetX = (width - renderW) / 2;
+      } else {
+        renderW = width;
+        renderH = width / aspect;
+        offsetX = 0;
+        offsetY = (height - renderH) / 2;
+      }
+
+      ctx.drawImage(img, x + offsetX, y + offsetY, renderW, renderH);
+      ctx.restore();
     }
 
     function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -371,25 +421,47 @@
       ctx.fillText(line, x, y);
     }
 
+    // Unduh 2 PNG
     function downloadPNG() {
-      const canvas = document.getElementById('mainCanvas');
-      const a = document.createElement('a');
-      a.download = `Laporan-Tahfizh-${Date.now()}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
+      const c1 = document.getElementById('canvasPage1');
+      const c2 = document.getElementById('canvasPage2');
+
+      const a1 = document.createElement('a');
+      a1.download = `Laporan-Tahfizh-Hal1-${Date.now()}.png`;
+      a1.href = c1.toDataURL('image/png');
+      a1.click();
+
+      setTimeout(() => {
+        const a2 = document.createElement('a');
+        a2.download = `Laporan-Tahfizh-Hal2-${Date.now()}.png`;
+        a2.href = c2.toDataURL('image/png');
+        a2.click();
+      }, 300);
     }
 
+    // Unduh PDF 2 Halaman
     function downloadPDF() {
-      const canvas = document.getElementById('mainCanvas');
-      const imgData = canvas.toDataURL('image/png');
+      const c1 = document.getElementById('canvasPage1');
+      const c2 = document.getElementById('canvasPage2');
+
+      const img1 = c1.toDataURL('image/png');
+      const img2 = c2.toDataURL('image/png');
+
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF('landscape', 'mm', 'a4');
-      pdf.addImage(imgData, 'PNG', 0, 0, 297, (canvas.height * 297) / canvas.width);
-      pdf.save(`Laporan-Tahfizh-${Date.now()}.pdf`);
+
+      const pdfW = 297;
+      const pdfH = (c1.height * pdfW) / c1.width;
+
+      pdf.addImage(img1, 'PNG', 0, 0, pdfW, pdfH);
+      pdf.addPage('landscape', 'a4');
+      pdf.addImage(img2, 'PNG', 0, 0, pdfW, pdfH);
+
+      pdf.save(`Laporan-Tahfizh-2Halaman-${Date.now()}.pdf`);
     }
 
     renderForms();
-    drawCanvas();
+    drawAllCanvases();
   </script>
 </body>
 </html>
