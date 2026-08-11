@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generator Laporan Tahfizh - Custom Text & Logo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+         background-color: #aee432;
+         }
+    #canvas-container {
+      width: 1200px;
+      height: 880px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 min-h-screen flex flex-col md:flex-row">
+
+  <!-- SIDEBAR CONTROL -->
+  <div class="w-full md:w-[400px] bg-white p-6 shadow-2xl overflow-y-auto max-h-screen flex-shrink-0 z-20">
+    <div class="border-b pb-3 mb-4">
+      <h2 class="text-xl font-bold text-emerald-800">Laporan Tahfizh Pekanan</h2>
+      <p class="text-xs text-slate-500">Isi sesuai nama</p>
+    </div>
+
+    <!-- Header & Logo Input -->
+    <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-xl border">
+      <h3 class="font-bold text-xs uppercase text-slate-600">Informasi</h3>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Judul Utama</label>
+        <input type="text" id="input-judul" value="LAPORAN PEKANAN TAHFIZH" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Nama Kelas / Sub-Judul</label>
+        <input type="text" id="input-kelas" value="KELAS VIII An-Najah" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Rentang Tanggal & Tahun</label>
+        <input type="text" id="input-periode" value="20 - 24 JULI 2026" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Nama Sekolah</label>
+        <input type="text" id="input-instansi" value="Sekolah Tahfidz Sahabat Qur'an" oninput="drawCanvas()" class="w-full p-2 border rounded text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">Upload Logo Sekolah (STSQ)</label>
+        <input type="file" id="input-logo" accept="image/*" onchange="updateLogo(event)" class="w-full p-1 border rounded text-xs">
+      </div>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="grid grid-cols-2 gap-2 mb-6">
+      <button onclick="downloadPNG()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg text-xs shadow transition">
+        Unduh PNG
+      </button>
+      <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-lg text-xs shadow transition">
+        Unduh PDF
+      </button>
+    </div>
+
+    <!-- Form Santri -->
+    <div class="space-y-3">
+      <h3 class="font-bold text-xs uppercase text-slate-600">Data 8 Santri</h3>
+      <div id="form-container" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- CANVAS PREVIEW -->
+  <div class="flex-1 p-6 overflow-auto flex items-center justify-center bg-slate-800">
+    <div class="transform scale-[0.6] lg:scale-[0.72] origin-center">
+      <div id="canvas-container">
+        <canvas id="mainCanvas" width="1200" height="880"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let customLogoImg = null;
+
+    const defaultData = [
+      { nama: "AKHDAN", hafalan: "2 Juz 4 HLM", ziyadah: "1 HLM", murojaah: "2 Juz 4 HLM", catatan: "Semangat dan maksimalkan hafalan lagi di pekan berikutnya.", fotoImg: null },
+      { nama: "FATEH", hafalan: "2 Juz 4 HLM", ziyadah: "1 HLM", murojaah: "2 Juz 4 HLM", catatan: "Semangat dan maksimalkan target hafalan lagi.", fotoImg: null },
+      { nama: "CAVA", hafalan: "1 Juz 13 HLM", ziyadah: "3 HLM", murojaah: "1 Juz 13 HLM", catatan: "Semangat dan maksimalkan target hafalan lagi.", fotoImg: null },
+      { nama: "SYAFIQ", hafalan: "9 Juz", ziyadah: "20 HLM", murojaah: "9 JUZ", catatan: "Dikuatkan lagi hafalan agar tidak mudah lupa.", fotoImg: null },
+      { nama: "RAYHAN", hafalan: "3 Juz 2 HLM", ziyadah: "2 HLM", murojaah: "3 Juz", catatan: "Fokus pada kelancaran juz 30. Tingkatkan muraja'ah.", fotoImg: null },
+      { nama: "AZZAM", hafalan: "5 Juz 10 HLM", ziyadah: "4 HLM", murojaah: "4 Juz", catatan: "Alhamdulillah ziyadah pekan ini lancar.", fotoImg: null },
+      { nama: "KENZIE", hafalan: "2 Juz", ziyadah: "1.5 HLM", murojaah: "2 Juz", catatan: "Perbaiki panjang pendek (mad) pada juz 29.", fotoImg: null },
+      { nama: "FAIZ", hafalan: "4 Juz 5 HLM", ziyadah: "3 HLM", murojaah: "4 Juz", catatan: "Pencapaian sangat baik pekan ini. Pertahankan!", fotoImg: null }
+    ];
+
+    let santriData = [...defaultData];
+
+    function renderForms() {
+      const container = document.getElementById('form-container');
+      container.innerHTML = '';
+      santriData.forEach((item, i) => {
+        const details = document.createElement('details');
+        details.className = 'bg-slate-50 rounded-lg border p-2 text-xs';
+        if (i === 0) details.open = true;
+        details.innerHTML = `
+          <summary class="font-bold cursor-pointer text-slate-700">Santri #${i+1}: ${item.nama}</summary>
+          <div class="space-y-2 pt-2">
+            <input type="text" value="${item.nama}" oninput="updateData(${i}, 'nama', this.value)" class="w-full p-1.5 border rounded" placeholder="Nama">
+            <input type="file" accept="image/*" onchange="updateFoto(${i}, event)" class="w-full p-1 border rounded text-[10px]">
+            <div class="grid grid-cols-2 gap-1">
+              <input type="text" value="${item.hafalan}" oninput="updateData(${i}, 'hafalan', this.value)" class="p-1.5 border rounded" placeholder="Hafalan">
+              <input type="text" value="${item.ziyadah}" oninput="updateData(${i}, 'ziyadah', this.value)" class="p-1.5 border rounded" placeholder="Ziyadah">
+            </div>
+            <input type="text" value="${item.murojaah}" oninput="updateData(${i}, 'murojaah', this.value)" class="w-full p-1.5 border rounded" placeholder="Murojaah">
+            <textarea oninput="updateData(${i}, 'catatan', this.value)" class="w-full p-1.5 border rounded h-16" placeholder="Catatan">${item.catatan}</textarea>
+          </div>
+        `;
+        container.appendChild(details);
+      });
+    }
+
+    function updateData(i, field, val) {
+      santriData[i][field] = val;
+      drawCanvas();
+    }
+
+    function updateFoto(i, e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            santriData[i].fotoImg = img;
+            drawCanvas();
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updateLogo(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            customLogoImg = img;
+            drawCanvas();
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function drawCanvas() {
+      const canvas = document.getElementById('mainCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = "#a3c9b8";
+      ctx.fillRect(0, 0, 1200, 880);
+
+      // Header Elements
+      const judul = document.getElementById('input-judul').value;
+      const kelas = document.getElementById('input-kelas').value;
+      const periode = document.getElementById('input-periode').value;
+      const instansi = document.getElementById('input-instansi').value;
+
+      // Judul Utama
+      ctx.fillStyle = "#064e3b";
+      ctx.font = "bold 30px Arial";
+      ctx.fillText(judul, 40, 48);
+
+      // Teks Kelas VIII An-Najah
+      ctx.fillStyle = "#065f46";
+      ctx.font = "bold 18px Arial";
+      ctx.fillText(kelas, 40, 74);
+
+      // Badge Periode
+      ctx.fillStyle = "#064e3b";
+      ctx.beginPath();
+      ctx.roundRect(40, 85, 230, 30, 6);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 14px Arial";
+      ctx.fillText(`[ ${periode} ]`, 52, 105);
+
+      // Box Logo Instansi
+      const instansiWidth = ctx.measureText(instansi).width;
+      const boxWidth = Math.max(260, instansiWidth + 75);
+      const boxX = 1160 - boxWidth;
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.beginPath();
+      ctx.roundRect(boxX, 25, boxWidth, 65, 12);
+      ctx.fill();
+
+      // Logo STSQ
+      const logoX = boxX + 10;
+      const logoY = 34;
+      const logoSize = 47;
+
+      if (customLogoImg) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
+        ctx.clip();
+        ctx.drawImage(customLogoImg, logoX, logoY, logoSize, logoSize);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = "#064e3b";
+        ctx.beginPath();
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, 8);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 13px Arial";
+        ctx.fillText("STSQ", logoX + 6, logoY + 28);
+      }
+
+      // Teks Nama Instansi (Sekolah Tahfidz Sahabat Qur'an)
+      ctx.fillStyle = "#064e3b";
+      ctx.font = "bold 13px Arial";
+      wrapText(ctx, instansi, logoX + 57, 52, boxWidth - 65, 16);
+
+      // Separator Line
+      ctx.strokeStyle = "rgba(6, 78, 59, 0.2)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(40, 130);
+      ctx.lineTo(1160, 130);
+      ctx.stroke();
+
+      // Render 8 Santri Cards
+      const startX = 40;
+      const startY = 145;
+      const cardW = 265;
+      const cardH = 330;
+      const gapX = 20;
+      const gapY = 20;
+
+      santriData.forEach((s, idx) => {
+        const col = idx % 4;
+        const row = Math.floor(idx / 4);
+        const x = startX + col * (cardW + gapX);
+        const y = startY + row * (cardH + gapY);
+
+        // Card Frame
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.beginPath();
+        ctx.roundRect(x, y, cardW, cardH, 16);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.stroke();
+
+        // Photo Frame
+        const photoX = x + (cardW - 80) / 2;
+        const photoY = y + 12;
+        ctx.fillStyle = "#cbd5e1";
+        ctx.beginPath();
+        ctx.roundRect(photoX, photoY, 80, 95, 8);
+        ctx.fill();
+
+        if (s.fotoImg) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(photoX, photoY, 80, 95, 8);
+          ctx.clip();
+          ctx.drawImage(s.fotoImg, photoX, photoY, 80, 95);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = "#64748b";
+          ctx.font = "10px Arial";
+          ctx.fillText("Foto Santri", photoX + 15, photoY + 52);
+        }
+
+        // Name Badge
+        ctx.fillStyle = "#fef08a";
+        ctx.beginPath();
+        ctx.roundRect(x + 50, y + 112, cardW - 100, 22, 4);
+        ctx.fill();
+
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 11px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(s.nama || "SANTRI", x + cardW / 2, y + 127);
+        ctx.textAlign = "left";
+
+        // Metrics Ribbons
+        const drawRibbon = (ry, label, val) => {
+          ctx.fillStyle = "#fef08a";
+          ctx.beginPath();
+          ctx.roundRect(x + 12, ry, cardW - 24, 22, 6);
+          ctx.fill();
+
+          ctx.fillStyle = "#1e293b";
+          ctx.font = "10px Arial";
+          ctx.fillText(`📖 ${label}: `, x + 20, ry + 15);
+          ctx.font = "bold 10px Arial";
+          ctx.fillText(val, x + 20 + ctx.measureText(`📖 ${label}: `).width, ry + 15);
+        };
+
+        drawRibbon(y + 140, "Jumlah hafalan", s.hafalan);
+        drawRibbon(y + 167, "Ziyadah Pekan ini", s.ziyadah);
+        drawRibbon(y + 194, "Muraja'ah", s.murojaah);
+
+        // Notes Box
+        const notesY = y + 223;
+        const notesH = 95;
+        ctx.fillStyle = "#fef08a";
+        ctx.beginPath();
+        ctx.roundRect(x + 12, notesY, cardW - 24, notesH, 8);
+        ctx.fill();
+
+        ctx.fillStyle = "#713f12";
+        ctx.font = "bold 10px Arial";
+        ctx.fillText("📖 Catatan:", x + 20, notesY + 16);
+
+        // Wrapped Text
+        ctx.fillStyle = "#1e293b";
+        ctx.font = "9.5px Arial";
+        wrapText(ctx, s.catatan || "-", x + 20, notesY + 30, cardW - 40, 13);
+      });
+
+      // Footer
+      ctx.fillStyle = "rgba(6, 78, 59, 0.7)";
+      ctx.font = "bold 11px Arial";
+      ctx.fillText("* Laporan Resmi Divisi Tahfizh", 40, 860);
+      ctx.fillText(instansi, 1160 - ctx.measureText(instansi).width, 860);
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        let testLine = line + words[n] + ' ';
+        let metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
+    function downloadPNG() {
+      const canvas = document.getElementById('mainCanvas');
+      const a = document.createElement('a');
+      a.download = `Laporan-Tahfizh-${Date.now()}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    }
+
+    function downloadPDF() {
+      const canvas = document.getElementById('mainCanvas');
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      pdf.addImage(imgData, 'PNG', 0, 0, 297, (canvas.height * 297) / canvas.width);
+      pdf.save(`Laporan-Tahfizh-${Date.now()}.pdf`);
+    }
+
+    renderForms();
+    drawCanvas();
+  </script>
+</body>
+</html>
