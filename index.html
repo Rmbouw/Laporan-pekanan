@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generator Laporan Tahfizh - Clean Header</title>
+  <title>Generator Laporan Tahfizh - Auto Save Storage</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
@@ -30,31 +30,34 @@
 
   <!-- SIDEBAR CONTROL -->
   <div class="w-full lg:w-[420px] bg-white p-5 lg:p-6 shadow-2xl overflow-y-auto max-h-screen flex-shrink-0 z-20">
-    <div class="border-b pb-3 mb-4">
-      <h2 class="text-xl font-bold text-emerald-800 flex items-center gap-2">
-        <span>🕌</span> LAPORAN TAHFIDZ
-      </h2>
-      <p class="text-xs text-slate-500">بسم الله الرحمن الرحيم</p>
+    <div class="border-b pb-3 mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-emerald-800 flex items-center gap-2">
+          <span>🕌</span> LAPORAN TAHFIDZ
+        </h2>
+        <p class="text-xs text-slate-500">بسم الله الرحمن الرحيم</p>
+      </div>
+      <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded">Auto-Saved 💾</span>
     </div>
 
     <!-- Header Inputs -->
     <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-      <h3 class="font-bold text-xs uppercase text-slate-600">Informasi </h3>
+      <h3 class="font-bold text-xs uppercase text-slate-600">Informasi Umum</h3>
       <div>
         <label class="block text-xs font-semibold mb-1">Judul Utama</label>
-        <input type="text" id="input-judul" value="LAPORAN PEKANAN TAHFIZH" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
+        <input type="text" id="input-judul" value="LAPORAN PEKANAN TAHFIZH" oninput="saveTextHeader()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
         <label class="block text-xs font-semibold mb-1">Nama Kelas</label>
-        <input type="text" id="input-kelas" value="KELAS VIII An-Najah" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
+        <input type="text" id="input-kelas" value="KELAS VIII An-Najah" oninput="saveTextHeader()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
         <label class="block text-xs font-semibold mb-1">Rentang Tanggal & Tahun</label>
-        <input type="text" id="input-periode" value="20 - 24 JULI 2026" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
+        <input type="text" id="input-periode" value="20 - 24 JULI 2026" oninput="saveTextHeader()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
-        <label class="block text-xs font-semibold mb-1">Nama Sekolah </label>
-        <input type="text" id="input-instansi" value="Sekolah Tahfidz Sahabat Qur'an" oninput="drawAllCanvases()" class="w-full p-2 border rounded text-xs">
+        <label class="block text-xs font-semibold mb-1">Nama Sekolah</label>
+        <input type="text" id="input-instansi" value="Sekolah Tahfidz Sahabat Qur'an" oninput="saveTextHeader()" class="w-full p-2 border rounded text-xs">
       </div>
       <div>
         <label class="block text-xs font-semibold mb-1">Upload Logo Sekolah (STSQ)</label>
@@ -73,9 +76,16 @@
     </div>
 
     <!-- Form Santri -->
-    <div class="space-y-3">
+    <div class="space-y-3 mb-6">
       <h3 class="font-bold text-xs uppercase text-slate-600">Data 8 Santri</h3>
       <div id="form-container" class="space-y-2"></div>
+    </div>
+
+    <!-- Reset Button -->
+    <div class="border-t pt-4">
+      <button onclick="clearAllData()" class="w-full bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 border border-slate-300 font-semibold py-2 px-3 rounded-lg text-xs transition">
+        🗑️ Reset Semua Foto & Data ke Default
+      </button>
     </div>
   </div>
 
@@ -109,6 +119,155 @@
 
     let santriData = [...defaultData];
 
+    // INITALIZATION & LOCALSTORAGE MANAGEMENT
+    window.onload = () => {
+      loadSavedData();
+      renderForms();
+      drawAllCanvases();
+    };
+
+    function saveTextHeader() {
+      const headerData = {
+        judul: document.getElementById('input-judul').value,
+        kelas: document.getElementById('input-kelas').value,
+        periode: document.getElementById('input-periode').value,
+        instansi: document.getElementById('input-instansi').value
+      };
+      localStorage.setItem('tahfizh_header_data', JSON.stringify(headerData));
+      drawAllCanvases();
+    }
+
+    function saveSantriTextData() {
+      const cleanData = santriData.map(s => ({
+        nama: s.nama,
+        hafalan: s.hafalan,
+        ziyadah: s.ziyadah,
+        murojaah: s.murojaah,
+        catatan: s.catatan
+      }));
+      localStorage.setItem('tahfizh_santri_data', JSON.stringify(cleanData));
+    }
+
+    function loadSavedData() {
+      // 1. Muat Teks Header
+      const savedHeader = localStorage.getItem('tahfizh_header_data');
+      if (savedHeader) {
+        const parsedHeader = JSON.parse(savedHeader);
+        if (parsedHeader.judul) document.getElementById('input-judul').value = parsedHeader.judul;
+        if (parsedHeader.kelas) document.getElementById('input-kelas').value = parsedHeader.kelas;
+        if (parsedHeader.periode) document.getElementById('input-periode').value = parsedHeader.periode;
+        if (parsedHeader.instansi) document.getElementById('input-instansi').value = parsedHeader.instansi;
+      }
+
+      // 2. Muat Teks Santri
+      const savedSantriText = localStorage.getItem('tahfizh_santri_data');
+      if (savedSantriText) {
+        const parsedSantri = JSON.parse(savedSantriText);
+        parsedSantri.forEach((item, i) => {
+          if (santriData[i]) {
+            santriData[i].nama = item.nama;
+            santriData[i].hafalan = item.hafalan;
+            santriData[i].ziyadah = item.ziyadah;
+            santriData[i].murojaah = item.murojaah;
+            santriData[i].catatan = item.catatan;
+          }
+        });
+      }
+
+      // 3. Muat Logo Sekolah (Base64)
+      const savedLogo = localStorage.getItem('tahfizh_logo_base64');
+      if (savedLogo) {
+        const img = new Image();
+        img.onload = () => {
+          customLogoImg = img;
+          drawAllCanvases();
+        };
+        img.src = savedLogo;
+      }
+
+      // 4. Muat 8 Foto Santri (Base64)
+      santriData.forEach((santri, i) => {
+        const savedFoto = localStorage.getItem(`tahfizh_foto_santri_${i}`);
+        if (savedFoto) {
+          const img = new Image();
+          img.onload = () => {
+            santriData[i].fotoImg = img;
+            drawAllCanvases();
+          };
+          img.src = savedFoto;
+        }
+      });
+    }
+
+    // HELPER: KOMPRESI GAMBAR AGAR TIDAK MEMENUHI LOCALSTORAGE
+    function resizeAndCompressImage(file, maxWidth, maxHeight, quality, callback) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Return JPEG Base64 terkompresi
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          callback(dataUrl, img);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateFoto(i, e) {
+      const file = e.target.files[0];
+      if (file) {
+        // Kompres foto santri ke max 400x500
+        resizeAndCompressImage(file, 400, 500, 0.75, (base64Str, imgObj) => {
+          try {
+            localStorage.setItem(`tahfizh_foto_santri_${i}`, base64Str);
+          } catch (err) {
+            alert('Penyimpanan lokal penuh. Hapus beberapa foto lama.');
+          }
+          santriData[i].fotoImg = imgObj;
+          drawAllCanvases();
+        });
+      }
+    }
+
+    function updateLogo(e) {
+      const file = e.target.files[0];
+      if (file) {
+        // Kompres logo sekolah ke max 200x200
+        resizeAndCompressImage(file, 200, 200, 0.8, (base64Str, imgObj) => {
+          try {
+            localStorage.setItem('tahfizh_logo_base64', base64Str);
+          } catch (err) {
+            alert('Penyimpanan lokal penuh.');
+          }
+          customLogoImg = imgObj;
+          drawAllCanvases();
+        });
+      }
+    }
+
     function renderForms() {
       const container = document.getElementById('form-container');
       container.innerHTML = '';
@@ -120,7 +279,10 @@
           <summary class="font-bold cursor-pointer text-slate-700">Santri #${i+1}: ${item.nama}</summary>
           <div class="space-y-2 pt-2">
             <input type="text" value="${item.nama}" oninput="updateData(${i}, 'nama', this.value)" class="w-full p-1.5 border rounded" placeholder="Nama">
-            <input type="file" accept="image/*" onchange="updateFoto(${i}, event)" class="w-full p-1 border rounded text-[10px]">
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">Upload Foto Santri #${i+1}</label>
+              <input type="file" accept="image/*" onchange="updateFoto(${i}, event)" class="w-full p-1 border rounded text-[10px]">
+            </div>
             <div class="grid grid-cols-2 gap-1">
               <input type="text" value="${item.hafalan}" oninput="updateData(${i}, 'hafalan', this.value)" class="p-1.5 border rounded" placeholder="Hafalan">
               <input type="text" value="${item.ziyadah}" oninput="updateData(${i}, 'ziyadah', this.value)" class="p-1.5 border rounded" placeholder="Ziyadah">
@@ -135,41 +297,18 @@
 
     function updateData(i, field, val) {
       santriData[i][field] = val;
+      saveSantriTextData();
       drawAllCanvases();
     }
 
-    function updateFoto(i, e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const img = new Image();
-          img.onload = () => {
-            santriData[i].fotoImg = img;
-            drawAllCanvases();
-          };
-          img.src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
+    function clearAllData() {
+      if (confirm('Apakah Anda yakin ingin menghapus semua foto dan data yang tersimpan di browser ini?')) {
+        localStorage.clear();
+        location.reload();
       }
     }
 
-    function updateLogo(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const img = new Image();
-          img.onload = () => {
-            customLogoImg = img;
-            drawAllCanvases();
-          };
-          img.src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
+    // CANVAS DRAWING LOGIC
     function drawAllCanvases() {
       drawSinglePage('canvasPage1', santriData.slice(0, 4));
       drawSinglePage('canvasPage2', santriData.slice(4, 8));
@@ -219,6 +358,7 @@
       ctx.fillText(`[ ${periode} ]`, 95, 116);
 
       // Header Kanan Logo
+      ctx.font = "bold 15px Arial";
       const instansiWidth = ctx.measureText(instansi).width;
       const boxWidth = Math.max(300, instansiWidth + 85);
       const boxX = 1160 - boxWidth;
@@ -280,7 +420,7 @@
         const y = startY + row * (cardH + gapY);
 
         // Box Kartu
-        ctx.fillStyle = "rgba(255, 255, 255, 0.72)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
         ctx.beginPath();
         ctx.roundRect(x, y, cardW, cardH, 20);
         ctx.fill();
@@ -312,7 +452,7 @@
 
         // Nama Badge
         const contentX = photoX + photoW + 20;
-        const contentW = cardW - photoW - 60;
+        const contentW = cardW - photoW - 50;
 
         ctx.fillStyle = "#fef08a";
         ctx.beginPath();
@@ -322,95 +462,90 @@
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        ctx.fillStyle = "#0f172a";
-        ctx.font = "bold 20px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(s.nama || "SANTRI", contentX + contentW / 2, photoY + 23);
-        ctx.textAlign = "left";
+        ctx.fillStyle = "#854d0e";
+        ctx.font = "bold 18px Arial";
+        ctx.fillText(s.nama, contentX + 12, photoY + 24);
 
-        // Pita Indikator Hafalan
-        const drawRibbon = (ry, label, val) => {
-          ctx.fillStyle = "#fef08a";
-          ctx.beginPath();
-          ctx.roundRect(contentX, ry, contentW, 36, 8);
-          ctx.fill();
+        // Detail Hafalan
+        const detailsList = [
+          { label: "Capaian Hafalan", val: s.hafalan },
+          { label: "Ziyadah Pekan Ini", val: s.ziyadah },
+          { label: "Muroja'ah Pekan Ini", val: s.murojaah }
+        ];
 
-          ctx.fillStyle = "#1e293b";
-          ctx.font = "15px Arial";
-          ctx.fillText(`📖 ${label}: `, contentX + 12, ry + 22);
-          ctx.font = "bold 15px Arial";
-          ctx.fillText(val, contentX + 12 + ctx.measureText(`📖 ${label}: `).width, ry + 22);
-        };
+        let currY = photoY + 55;
+        detailsList.forEach(item => {
+          ctx.fillStyle = "#033829";
+          ctx.font = "bold 12px Arial";
+          ctx.fillText(item.label, contentX, currY);
 
-        drawRibbon(photoY + 46, "Jml Hafalan", s.hafalan);
-        drawRibbon(photoY + 92, "Ziyadah", s.ziyadah);
-        drawRibbon(photoY + 138, "Muraja'ah", s.murojaah);
+          ctx.fillStyle = "#0f172a";
+          ctx.font = "14px Arial";
+          ctx.fillText(`: ${item.val}`, contentX + 115, currY);
 
-        // Kotak Catatan
-        const notesY = photoY + photoH + 15;
-        const notesW = cardW - 40;
-        const notesH = 105;
+          currY += 24;
+        });
 
-        ctx.fillStyle = "#fef08a";
+        // Box Catatan Ustaz
+        const catY = photoY + photoH + 15;
+        const catW = cardW - 40;
+        const catH = cardH - photoH - 50;
+
+        ctx.fillStyle = "#f1f5f9";
         ctx.beginPath();
-        ctx.roundRect(photoX, notesY, notesW, notesH, 10);
+        ctx.roundRect(photoX, catY, catW, catH, 10);
         ctx.fill();
-        ctx.strokeStyle = "#fde047";
+        ctx.strokeStyle = "#cbd5e1";
+        ctx.lineWidth = 1;
         ctx.stroke();
 
-        ctx.fillStyle = "#713f12";
-        ctx.font = "bold 16px Arial";
-        ctx.fillText("📝 Catatan:", photoX + 15, notesY + 22);
+        ctx.fillStyle = "#044e3a";
+        ctx.font = "bold 12px Arial";
+        ctx.fillText("Catatan Pengampu:", photoX + 12, catY + 20);
 
-        ctx.fillStyle = "#1e293b";
-        ctx.font = "14px Arial";
-        wrapText(ctx, s.catatan || "-", photoX + 15, notesY + 42, notesW - 30, 16);
+        ctx.fillStyle = "#334155";
+        ctx.font = "italic 13px Arial";
+        wrapText(ctx, s.catatan, photoX + 12, catY + 40, catW - 24, 18);
       });
-
-      // Footer
-      ctx.fillStyle = "#033829";
-      ctx.font = "bold 13px Arial";
-      ctx.fillText("*STSQ An-Najah EST 6 KLS VIII", 40, 878);
-      ctx.fillText(instansi, 1160 - ctx.measureText(instansi).width, 878);
     }
 
-    function drawAspectCropImage(ctx, img, x, y, width, height, radius) {
+    // Helper Crop Image
+    function drawAspectCropImage(ctx, img, x, y, w, h, radius) {
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(x, y, width, height, radius);
+      ctx.roundRect(x, y, w, h, radius);
       ctx.clip();
 
-      const imgWidth = img.naturalWidth || img.width;
-      const imgHeight = img.naturalHeight || img.height;
+      const imgRatio = img.width / img.height;
+      const targetRatio = w / h;
+      let sw, sh, sx, sy;
 
-      const aspect = imgWidth / imgHeight;
-      const targetAspect = width / height;
-
-      let renderW, renderH, offsetX, offsetY;
-
-      if (aspect > targetAspect) {
-        renderH = height;
-        renderW = height * aspect;
-        offsetY = 0;
-        offsetX = (width - renderW) / 2;
+      if (imgRatio > targetRatio) {
+        sh = img.height;
+        sw = img.height * targetRatio;
+        sx = (img.width - sw) / 2;
+        sy = 0;
       } else {
-        renderW = width;
-        renderH = width / aspect;
-        offsetX = 0;
-        offsetY = (height - renderH) / 2;
+        sw = img.width;
+        sh = img.width / targetRatio;
+        sx = 0;
+        sy = (img.height - sh) / 2;
       }
 
-      ctx.drawImage(img, x + offsetX, y + offsetY, renderW, renderH);
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
       ctx.restore();
     }
 
+    // Helper Text Wrap
     function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
       const words = text.split(' ');
       let line = '';
+
       for (let n = 0; n < words.length; n++) {
-        let testLine = line + words[n] + ' ';
-        let metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && n > 0) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
           ctx.fillText(line, x, y);
           line = words[n] + ' ';
           y += lineHeight;
@@ -421,47 +556,37 @@
       ctx.fillText(line, x, y);
     }
 
-    // Unduh 2 PNG
+    // Download PNG
     function downloadPNG() {
-      const c1 = document.getElementById('canvasPage1');
-      const c2 = document.getElementById('canvasPage2');
-
-      const a1 = document.createElement('a');
-      a1.download = `Laporan-Tahfizh-Hal1-${Date.now()}.png`;
-      a1.href = c1.toDataURL('image/png');
-      a1.click();
-
-      setTimeout(() => {
-        const a2 = document.createElement('a');
-        a2.download = `Laporan-Tahfizh-Hal2-${Date.now()}.png`;
-        a2.href = c2.toDataURL('image/png');
-        a2.click();
-      }, 300);
+      ['canvasPage1', 'canvasPage2'].forEach((id, index) => {
+        const canvas = document.getElementById(id);
+        const link = document.createElement('a');
+        link.download = `Laporan_Tahfizh_Halaman_${index + 1}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
     }
 
-    // Unduh PDF 2 Halaman
     function downloadPDF() {
-      const c1 = document.getElementById('canvasPage1');
-      const c2 = document.getElementById('canvasPage2');
-
-      const img1 = c1.toDataURL('image/png');
-      const img2 = c2.toDataURL('image/png');
-
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [1200, 900]
+      });
 
-      const pdfW = 297;
-      const pdfH = (c1.height * pdfW) / c1.width;
+      const canvas1 = document.getElementById('canvasPage1');
+      const canvas2 = document.getElementById('canvasPage2');
 
-      pdf.addImage(img1, 'PNG', 0, 0, pdfW, pdfH);
-      pdf.addPage('landscape', 'a4');
-      pdf.addImage(img2, 'PNG', 0, 0, pdfW, pdfH);
+      const imgData1 = canvas1.toDataURL('image/jpeg', 0.95);
+      const imgData2 = canvas2.toDataURL('image/jpeg', 0.95);
 
-      pdf.save(`Laporan-Tahfizh-2Halaman-${Date.now()}.pdf`);
+      pdf.addImage(imgData1, 'JPEG', 0, 0, 1200, 900);
+      pdf.addPage([1200, 900], 'landscape');
+      pdf.addImage(imgData2, 'JPEG', 0, 0, 1200, 900);
+
+      pdf.save('Laporan_Tahfizh_Pekanan.pdf');
     }
-
-    renderForms();
-    drawAllCanvases();
   </script>
 </body>
 </html>
